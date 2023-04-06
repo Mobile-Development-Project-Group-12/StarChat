@@ -4,26 +4,40 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import com.group12.starchat.model.repository.AuthenticationRepo
+import com.group12.starchat.model.models.Friends
+import com.group12.starchat.model.models.User
+import com.group12.starchat.model.repository.DatabaseRepo
+import com.group12.starchat.model.repository.Resources
 
 class HomeViewModel(
-    private val repository: AuthenticationRepo = AuthenticationRepo(),
+    private val repository: DatabaseRepo = DatabaseRepo(),
 ): ViewModel() {
 
-    // Home Screen Logic goes here
-    // (Friends list Logic)
     var homeUiState by mutableStateOf(HomeUiState())
+
+    val hasUser: Boolean
+        get() = repository.hasUser()
+
+    private val userId: String
+        get() = repository.getUserId()
+
+    fun loadFriends() {
+        if (hasUser) {
+            if (userId.isNotBlank()) {
+                repository.getFriendsList()
+            }
+        } else {
+            homeUiState = homeUiState.copy( friendsList = Resources.Failure(
+                throwable = Throwable("User is not logged in!")
+            ))
+        }
+    }
+
+    fun signOut() = repository.signOut()
 
 }
 
 data class HomeUiState(
-    val userName: String = "",
-    val password: String = "",
-    val userNameSignUp: String = "",
-    val passwordSignUp: String = "",
-    val confirmPasswordSignUp: String = "",
-    val isLoading: Boolean = false,
-    val isSuccessLogin: Boolean = false,
-    val signUpError: String? = null,
-    val loginError: String? = null,
+    val friendsList: Resources<List<User>> = Resources.Loading(),
+    val diaryDeletedStatus: Boolean = false,
 )

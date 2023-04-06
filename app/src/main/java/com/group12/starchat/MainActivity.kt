@@ -12,12 +12,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.group12.starchat.view.theme.StarChatTheme
 import com.group12.starchat.viewModel.HomeViewModel
 import com.group12.starchat.viewModel.SigninViewModel
+import com.group12.starchat.viewModel.SignupViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             val signinViewModel = viewModel(modelClass = SigninViewModel::class.java)
+            val signupViewModel = viewModel(modelClass = SignupViewModel::class.java)
             val homeViewModel = viewModel(modelClass = HomeViewModel::class.java)
             StarChatTheme {
                 // A surface container using the 'background' color from the theme
@@ -26,7 +28,8 @@ class MainActivity : ComponentActivity() {
                 ) {
                     Navigation(
                         signinViewModel = signinViewModel,
-                        homeViewModel = homeViewModel
+                        homeViewModel = homeViewModel,
+                        signupViewModel = signupViewModel
                     )
                 }
             }

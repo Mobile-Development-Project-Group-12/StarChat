@@ -38,7 +38,7 @@ android {
         compose true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion '1.4.0'
+        kotlinCompilerExtensionVersion "$compose_compiler_version"
     }
     packagingOptions {
         resources {
@@ -51,11 +51,11 @@ dependencies {
 
     // Default Dependencies
     implementation 'androidx.core:core-ktx:1.9.0'
-    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.0'
-    implementation 'androidx.activity:activity-compose:1.6.1'
-    implementation "androidx.compose.ui:ui:1.3.3"
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.1'
+    implementation 'androidx.activity:activity-compose:1.7.0'
+    implementation "androidx.compose.ui:ui:1.4.0"
     implementation "androidx.compose.ui:ui-tooling-preview:$compose_ui_version"
-    implementation 'androidx.compose.material:material:1.3.1'
+    implementation 'androidx.compose.material:material:1.4.0'
 
     // Code Testing
     testImplementation 'junit:junit:4.13.2'
@@ -68,10 +68,10 @@ dependencies {
     debugImplementation "androidx.compose.ui:ui-test-manifest:$compose_ui_version"
 
     // Kotlin Dependencies
-    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.6.0'
+    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.6.1'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.0'
     implementation "androidx.compose.runtime:runtime-livedata:$compose_ui_version"
-    implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.6.0'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.6.1'
     implementation "androidx.navigation:navigation-compose:2.5.3"
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.6.4'
 
@@ -86,7 +86,10 @@ dependencies {
     implementation 'com.google.firebase:firebase-firestore-ktx'
     implementation 'com.google.firebase:firebase-storage-ktx'
 
-    // http client (retrofit and gson)
-    implementation "com.squareup.retrofit2:retrofit:2.9.0"
-    implementation "com.squareup.retrofit2:converter-gson:2.9.0"
+    // Stream Messaging
+    implementation "io.getstream:stream-chat-android-compose:5.12.0"
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+    implementation 'com.squareup.retrofit2:converter-jackson:2.9.0'
+    implementation 'io.fusionauth:fusionauth-jwt:5.2.2'
+    implementation "androidx.compose.material:material-icons-extended:$compose_ui_version"
 }

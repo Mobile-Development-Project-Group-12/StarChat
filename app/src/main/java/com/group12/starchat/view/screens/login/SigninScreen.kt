@@ -102,8 +102,8 @@ fun SigninScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 48.dp),
-                value = signinUiState?.userName ?: "",
-                onValueChange = {signinViewMdoel?.onUserNameChange(it)},
+                value = signinUiState?.email ?: "",
+                onValueChange = {signinViewMdoel?.onEmailChange(it)},
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Default.Person,

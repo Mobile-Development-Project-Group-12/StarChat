@@ -1,6 +1,7 @@
 package com.group12.starchat.model.repository
 
 import android.net.Uri
+import androidx.compose.runtime.*
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.CollectionReference
@@ -8,15 +9,26 @@ import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
+import com.group12.starchat.model.models.Chat
 import com.group12.starchat.model.models.Friends
+import com.group12.starchat.model.models.User
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 
-const val FRIENDS_COLLECTION_REF = "Friends"
+/**
+ * Top Level Firebase References:
+ */
 const val USERS_COLLECTION_REF = "Users"
+const val MESSAGEROOMS_COLLECTION_REF = "MessageRooms"
 
-class FirebaseRepository() {
+/**
+ * Subcollection Firebase References:
+ */
+const val FRIENDS_COLLECTION_REF = "Friends"
+const val MESSAGES_COLLECTION_REF = "Messages"
+
+class DatabaseRepo() {
 
     var storage = FirebaseStorage.getInstance()
 
@@ -26,25 +38,38 @@ class FirebaseRepository() {
 
     fun getUserId(): String = Firebase.auth.currentUser?.uid.orEmpty()
 
-    fun getFriendsRef(): CollectionReference {
+    fun getUsersRef(): CollectionReference {
 
-        val friendsRef = Firebase.firestore.collection(USERS_COLLECTION_REF).document(getUserId()).collection(FRIENDS_COLLECTION_REF)
+        val friendsRef = Firebase.firestore.collection(USERS_COLLECTION_REF)
 
         return friendsRef
     }
 
-    fun getFriendsList(
-        userId: String
-    ): Flow<Resources<List<Friends>>> = callbackFlow {
+    fun getMessagesRef(RoomId: String): CollectionReference {
+
+        val messagesRef = Firebase.firestore.collection(MESSAGEROOMS_COLLECTION_REF).document(RoomId).collection(MESSAGES_COLLECTION_REF)
+
+        return messagesRef
+    }
+
+    fun getRoomsRef(): CollectionReference {
+
+        val roomsRef = Firebase.firestore.collection(MESSAGEROOMS_COLLECTION_REF)
+
+        return roomsRef
+    }
+
+    fun getFriendsList(): Flow<Resources<List<Friends>>> = callbackFlow {
         var snapshotStateListener:ListenerRegistration? = null
 
         try {
-            snapshotStateListener = getFriendsRef()
-                .orderBy("friendId")
+            snapshotStateListener = getUsersRef()
+                .orderBy("userId")
+                .whereNotEqualTo("userId", getUserId())
                 .addSnapshotListener{ snapshot, e ->
                     val response = if (snapshot != null) {
-                        val entries = snapshot.toObjects(Friends::class.java)
-                        Resources.Success(data = entries)
+                        val friends = snapshot.toObjects(Friends::class.java)
+                        Resources.Success(data = friends)
                     } else {
                         Resources.Failure(throwable = e)
                     }
@@ -60,41 +85,105 @@ class FirebaseRepository() {
         }
     }
 
-    fun addFriend(
-        name: String,
-        imageUri: Uri?,
-        status: String,
+    fun getRooms(): Flow<Resources<List<Friends>>> = callbackFlow {
+        var snapshotStateListener:ListenerRegistration? = null
+
+        try {
+            snapshotStateListener = getRoomsRef()
+                .orderBy("RoomId")
+                .whereArrayContains("Users", getUserId())
+                .addSnapshotListener{ snapshot, e ->
+                    val response = if (snapshot != null) {
+                        val friends = snapshot.toObjects(Friends::class.java)
+                        Resources.Success(data = friends)
+                    } else {
+                        Resources.Failure(throwable = e)
+                    }
+                    trySend(response)
+                }
+        } catch (e: Exception) {
+            trySend(Resources.Failure(e.cause))
+            e.printStackTrace()
+        }
+
+        awaitClose {
+            snapshotStateListener?.remove()
+        }
+    }
+
+    fun addUser(
+        id: String,
         onComplete: (Boolean) -> Unit
     ) {
-        val documentId = getFriendsRef().document().id
-        var addFile = imageUri
-        val addDiaryImageRef = storage.reference.child("Users/${getUserId()}/Friends/$documentId")
+        //val documentId = getUsersRef().document().id
 
-        addDiaryImageRef.putFile(addFile!!).addOnSuccessListener {
-            addDiaryImageRef.downloadUrl.addOnSuccessListener { Url ->
+        val user = User(
+            userId = id,
+            userName = "",
+            Status = "",
+            imageUrl = ""
+        )
 
-                val diary = Friends(
-                    friendId = documentId,
-                    friendName = name,
-                    friendStatus = status,
-                    imageUrl = Url.toString()
-                )
-
-                getFriendsRef()
-                    .document(documentId)
-                    .set(diary)
-                    .addOnCompleteListener { result ->
-                        onComplete.invoke(result.isSuccessful)
-                    }
-
+        getUsersRef()
+            .document(id)
+            .set(user)
+            .addOnCompleteListener { result ->
+                onComplete.invoke(result.isSuccessful)
             }
+    }
+
+    fun getMessages(
+        RoomId: String
+    ): Flow<Resources<List<Chat>>> = callbackFlow {
+        var snapshotStateListener:ListenerRegistration? = null
+
+        try {
+            snapshotStateListener = getMessagesRef(RoomId)
+                .addSnapshotListener{ snapshot, e ->
+                    val response = if (snapshot != null) {
+                        val messages = snapshot.toObjects(Chat::class.java)
+                        Resources.Success(data = messages)
+                    } else {
+                        Resources.Failure(throwable = e)
+                    }
+                    trySend(response)
+                }
+        } catch (e: Exception) {
+            trySend(Resources.Failure(e.cause))
+            e.printStackTrace()
         }
+
+        awaitClose {
+            snapshotStateListener?.remove()
+        }
+
+    }
+
+    fun sendMessage(
+        FriendId: String,
+        userId: String,
+        message: String,
+        onComplete: (Boolean) -> Unit
+    ) {
+        val documentId = getMessagesRef(FriendId).document().id
+
+        val chat = Chat(
+            userId = userId,
+            message = message,
+            timeSent = Timestamp.now()
+        )
+
+        getMessagesRef(FriendId)
+            .document(documentId)
+            .set(chat)
+            .addOnCompleteListener { result ->
+                onComplete.invoke(result.isSuccessful)
+            }
     }
 
     fun signOut() = Firebase.auth.signOut()
 
 }
-
 
 sealed class Resources<T>(
     val data: T? = null,
