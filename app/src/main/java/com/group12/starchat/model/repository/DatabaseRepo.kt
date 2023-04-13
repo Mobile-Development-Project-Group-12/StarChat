@@ -1,8 +1,7 @@
 package com.group12.starchat.model.repository
 
-import android.net.Uri
 import androidx.compose.runtime.*
-import com.google.firebase.Timestamp
+import com.google.firebase.functions.FirebaseFunctions
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.ListenerRegistration
@@ -15,6 +14,7 @@ import com.group12.starchat.model.models.User
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+
 
 /**
  * Top Level Firebase References:
@@ -31,6 +31,7 @@ const val MESSAGES_COLLECTION_REF = "Messages"
 class DatabaseRepo() {
 
     var storage = FirebaseStorage.getInstance()
+    var functions = FirebaseFunctions.getInstance()
 
     fun user() = Firebase.auth.currentUser
 
@@ -135,27 +136,6 @@ class DatabaseRepo() {
     fun getMessages(
         RoomId: String
     ): Flow<Resources<List<Chat>>> = callbackFlow {
-        var snapshotStateListener:ListenerRegistration? = null
-
-        try {
-            snapshotStateListener = getMessagesRef(RoomId)
-                .addSnapshotListener{ snapshot, e ->
-                    val response = if (snapshot != null) {
-                        val messages = snapshot.toObjects(Chat::class.java)
-                        Resources.Success(data = messages)
-                    } else {
-                        Resources.Failure(throwable = e)
-                    }
-                    trySend(response)
-                }
-        } catch (e: Exception) {
-            trySend(Resources.Failure(e.cause))
-            e.printStackTrace()
-        }
-
-        awaitClose {
-            snapshotStateListener?.remove()
-        }
 
     }
 
@@ -165,22 +145,18 @@ class DatabaseRepo() {
         message: String,
         onComplete: (Boolean) -> Unit
     ) {
-        val documentId = getMessagesRef(FriendId).document().id
 
-        val chat = Chat(
-            userId = userId,
-            message = message,
-            timeSent = Timestamp.now()
-        )
-
-        getMessagesRef(FriendId)
-            .document(documentId)
-            .set(chat)
-            .addOnCompleteListener { result ->
-                onComplete.invoke(result.isSuccessful)
-            }
     }
 
+    fun MyFunction(): String {
+        var result = ""
+
+        functions.getHttpsCallable("http://localhost:5000/starchat-62e58/us-central1/function7").call().addOnCompleteListener {
+            result = it.result?.data.toString()
+        }
+
+        return result
+    }
     fun signOut() = Firebase.auth.signOut()
 
 }

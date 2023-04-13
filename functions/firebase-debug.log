@@ -1,0 +1,105 @@
+[debug] [2023-04-13T11:35:19.418Z] ----------------------------------------------------------------------
+[debug] [2023-04-13T11:35:19.420Z] Command:       /Users/danielmendes/.nvm/versions/node/v19.0.0/bin/node /Users/danielmendes/.nvm/versions/node/v19.0.0/bin/firebase functions:shell
+[debug] [2023-04-13T11:35:19.420Z] CLI Version:   11.26.0
+[debug] [2023-04-13T11:35:19.420Z] Platform:      darwin
+[debug] [2023-04-13T11:35:19.420Z] Node Version:  v19.0.0
+[debug] [2023-04-13T11:35:19.420Z] Time:          Thu Apr 13 2023 14:35:19 GMT+0300 (Eastern European Summer Time)
+[debug] [2023-04-13T11:35:19.420Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2023-04-13T11:35:19.451Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2023-04-13T11:35:19.452Z] > authorizing via signed-in user (danielsdubstep35@gmail.com)
+[debug] [2023-04-13T11:35:19.452Z] [iam] checking project starchat-62e58 for permissions ["firebase.projects.get"]
+[debug] [2023-04-13T11:35:19.452Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/starchat-62e58:testIamPermissions [none]
+[debug] [2023-04-13T11:35:19.453Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/starchat-62e58:testIamPermissions x-goog-quota-user=projects/starchat-62e58
+[debug] [2023-04-13T11:35:19.453Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/starchat-62e58:testIamPermissions {"permissions":["firebase.projects.get"]}
+[debug] [2023-04-13T11:35:20.347Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/starchat-62e58:testIamPermissions 200
+[debug] [2023-04-13T11:35:20.348Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/starchat-62e58:testIamPermissions {"permissions":["firebase.projects.get"]}
+[warn] ⚠  functions: Functions Emulator unable to start on port 5000, starting on 5001 instead. {"metadata":{"emulator":{"name":"functions"},"message":"Functions Emulator unable to start on port 5000, starting on 5001 instead."}}
+[debug] [2023-04-13T11:35:20.479Z] [functions] Functions Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2023-04-13T11:35:20.480Z] defaultcredentials: writing to file /Users/danielmendes/.config/firebase/danielsdubstep35_gmail_com_application_default_credentials.json
+[debug] [2023-04-13T11:35:20.481Z] DEBUG: Setting GAC to /Users/danielmendes/.config/firebase/danielsdubstep35_gmail_com_application_default_credentials.json
+[debug] [2023-04-13T11:35:20.481Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/starchat-62e58/adminSdkConfig [none]
+[debug] [2023-04-13T11:35:20.819Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/starchat-62e58/adminSdkConfig 200
+[debug] [2023-04-13T11:35:20.820Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/starchat-62e58/adminSdkConfig {"projectId":"starchat-62e58","storageBucket":"starchat-62e58.appspot.com"}
+[debug] [2023-04-13T11:35:20.838Z] [functions] Watching "/Users/danielmendes/AndroidStudioProjects/StarChat/functions" for Cloud Functions...
+[debug] [2023-04-13T11:35:20.845Z] Validating nodejs source
+[debug] [2023-04-13T11:35:21.300Z] > [functions] package.json contents: {
+  "name": "functions",
+  "description": "Cloud Functions for Firebase",
+  "scripts": {
+    "lint": "eslint .",
+    "serve": "firebase emulators:start --only functions",
+    "shell": "firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "engines": {
+    "node": "16"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-admin": "^11.5.0",
+    "firebase-functions": "^4.2.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.15.0",
+    "eslint-config-google": "^0.14.0",
+    "firebase-functions-test": "^3.0.0"
+  },
+  "private": true
+}
+[debug] [2023-04-13T11:35:21.300Z] Building nodejs source
+[debug] [2023-04-13T11:35:21.300Z] Failed to find version of module node: reached end of search path /Users/danielmendes/AndroidStudioProjects/StarChat/functions/node_modules
+[warn] ⚠  functions: Your requested "node" version "16" doesn't match your global version "19". Using node@19 from host. 
+[debug] [2023-04-13T11:35:21.302Z] Could not find functions.yaml. Must use http discovery
+[debug] [2023-04-13T11:35:21.306Z] Found firebase-functions binary at '/Users/danielmendes/AndroidStudioProjects/StarChat/functions/node_modules/.bin/firebase-functions'
+[debug] [2023-04-13T11:35:21.434Z] Serving at port 8576
+
+[debug] [2023-04-13T11:35:21.704Z] listening on *:3000
+
+[debug] [2023-04-13T11:35:21.706Z] Got response from /__/functions.yaml {"endpoints":{"function7":{"platform":"gcfv1","availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"httpsTrigger":{},"entryPoint":"function7"}},"specVersion":"v1alpha1","requiredAPIs":[]}
+[debug] [2023-04-13T11:35:21.717Z] shutdown requested via /__/quitquitquit
+
+[debug] [2023-04-13T11:35:31.733Z] [functions] Loaded functions definitions from source: function7.
+[debug] [2023-04-13T11:35:31.736Z] [functions[us-central1-function7]] http function initialized (http://127.0.0.1:5001/starchat-62e58/us-central1/function7).
+[info] i  functions: Loaded functions: function7 
+[warn] ⚠  functions: The following emulators are not running, calls to these services will affect production: firestore, database, pubsub, storage, eventarc 
+[debug] [2023-04-13T11:37:59.609Z] DEBUG: File /Users/danielmendes/AndroidStudioProjects/StarChat/functions/index.js changed, reloading triggers
+[debug] [2023-04-13T11:38:00.650Z] Validating nodejs source
+[debug] [2023-04-13T11:38:01.582Z] > [functions] package.json contents: {
+  "name": "functions",
+  "description": "Cloud Functions for Firebase",
+  "scripts": {
+    "lint": "eslint .",
+    "serve": "firebase emulators:start --only functions",
+    "shell": "firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "engines": {
+    "node": "16"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-admin": "^11.5.0",
+    "firebase-functions": "^4.2.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.15.0",
+    "eslint-config-google": "^0.14.0",
+    "firebase-functions-test": "^3.0.0"
+  },
+  "private": true
+}
+[debug] [2023-04-13T11:38:01.582Z] Building nodejs source
+[debug] [2023-04-13T11:38:01.583Z] Failed to find version of module node: reached end of search path /Users/danielmendes/AndroidStudioProjects/StarChat/functions/node_modules
+[warn] ⚠  functions: Your requested "node" version "16" doesn't match your global version "19". Using node@19 from host. 
+[debug] [2023-04-13T11:38:01.601Z] Could not find functions.yaml. Must use http discovery
+[debug] [2023-04-13T11:38:01.605Z] Found firebase-functions binary at '/Users/danielmendes/AndroidStudioProjects/StarChat/functions/node_modules/.bin/firebase-functions'
+[debug] [2023-04-13T11:38:01.890Z] Serving at port 8938
+
+[error] ⬢  functions: Failed to load function definition from source: FetchError: request to http://localhost:8938/__/quitquitquit failed, reason: connect ECONNREFUSED ::1:8938 {"metadata":{"emulator":{"name":"functions"},"message":"Failed to load function definition from source: FetchError: request to http://localhost:8938/__/quitquitquit failed, reason: connect ECONNREFUSED ::1:8938"}}
+[debug] [2023-04-13T11:55:03.005Z] Functions emulator received unknown request at path /
+[debug] [2023-04-13T11:55:03.183Z] Functions emulator received unknown request at path /favicon.ico
