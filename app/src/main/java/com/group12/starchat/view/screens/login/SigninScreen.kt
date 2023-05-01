@@ -1,6 +1,5 @@
 package com.group12.starchat.view.screens.login
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
@@ -65,15 +64,9 @@ fun SigninScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.ic_launcher_background),
+                    painter = painterResource(id = R.mipmap.ic_launcher),
                     contentDescription = "Logo Background",
                     modifier = Modifier.fillMaxSize()
-                )
-
-                Image(
-                    modifier = Modifier.fillMaxSize(0.75F),
-                    painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                    contentDescription = "Logo"
                 )
             }
 

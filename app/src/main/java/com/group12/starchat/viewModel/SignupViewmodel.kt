@@ -2,6 +2,7 @@ package com.group12.starchat.viewModel
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -52,8 +53,12 @@ class SignupViewModel(
     fun createUser(context: Context) = viewModelScope.launch {
         try {
 
+            if (signupUiState.imageUri == null) {
+                throw IllegalArgumentException("Add a profile picture!")
+            }
+
             if (!validateSignupForm()) {
-                throw IllegalArgumentException("email and password can not be empty")
+                throw IllegalArgumentException("Please fill all the fields!")
             }
 
             signupUiState = signupUiState.copy(isLoading = true)
@@ -91,6 +96,14 @@ class SignupViewModel(
 
             }
 
+            databaseRepository.addUser(
+                userName = signupUiState.userName,
+                imageUri = signupUiState.imageUri ?: Uri.EMPTY,
+                email = signupUiState.email
+            ) {
+                Log.e("///// User Added /////", "User Added Successfully to the database")
+            }
+
         } catch (e: Exception) {
             signupUiState = signupUiState.copy(signUpError = e.localizedMessage)
             e.printStackTrace()
@@ -107,7 +120,6 @@ data class SignupUiState(
     val imageUri: Uri? = null,
     val userName: String = "",
     val confirmPassword: String = "",
-
     val isLoading: Boolean = false,
     val isSuccessLogin: Boolean = false,
     val signUpError: String? = null,

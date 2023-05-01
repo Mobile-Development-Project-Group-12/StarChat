@@ -1,7 +1,6 @@
 package com.group12.starchat.viewModel
 
 import android.content.Context
-import android.net.Uri
 import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -9,12 +8,10 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.group12.starchat.model.repository.AuthenticationRepo
-import com.group12.starchat.model.repository.DatabaseRepo
 import kotlinx.coroutines.launch
 
 class SigninViewModel(
     private val repository: AuthenticationRepo = AuthenticationRepo(),
-    private val databaseRepository: DatabaseRepo = DatabaseRepo(),
 ) : ViewModel() {
 
     val hasUser: Boolean
@@ -61,10 +58,6 @@ class SigninViewModel(
                         Toast.LENGTH_SHORT
                     ).show()
 
-                    databaseRepository.addUser(repository.getUserId()) {
-
-                    }
-
                     loginUiState = loginUiState.copy(isSuccessLogin = true)
                 } else {
                     Toast.makeText(
@@ -88,7 +81,6 @@ class SigninViewModel(
 data class LoginUiState(
     val email: String = "",
     val password: String = "",
-
     val isLoading: Boolean = false,
     val isSuccessLogin: Boolean = false,
     val signUpError: String? = null,

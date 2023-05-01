@@ -1,162 +1,335 @@
 package com.group12.starchat.view.screens.main
 
 import android.util.Log
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Card
-import androidx.compose.material.Divider
-import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.group12.starchat.R
+import com.google.firebase.auth.FirebaseAuth
+import com.group12.starchat.model.models.Rooms
 import com.group12.starchat.model.models.User
+import com.group12.starchat.model.repository.Resources
+import com.group12.starchat.view.components.bottomBars.BottomNavigationHome
 import com.group12.starchat.view.components.coilImages.coilImage
-import com.group12.starchat.view.theme.StarChatTheme
+import com.group12.starchat.view.components.topBars.HomeTopBar
 import com.group12.starchat.viewModel.HomeUiState
 import com.group12.starchat.viewModel.HomeViewModel
-import io.getstream.chat.android.client.ChatClient
-import io.getstream.chat.android.client.logger.ChatLogLevel
-import io.getstream.chat.android.compose.ui.channels.ChannelsScreen
-import io.getstream.chat.android.compose.ui.messages.MessagesScreen
-import io.getstream.chat.android.offline.model.message.attachments.UploadAttachmentsNetworkType
-import io.getstream.chat.android.offline.plugin.configuration.Config
-import io.getstream.chat.android.offline.plugin.factory.StreamOfflinePluginFactory
 
 @Composable
 fun HomeScreen(
     homeViewModel: HomeViewModel?,
-    onSignOutClick: () -> Unit,
-    onChannelClick: (String) -> Unit,
+    onNavToLoginPage: () -> Unit,
+    onRoomClick: (roomId: String) -> Unit,
+    navToRoom: () -> Unit,
+    navToRoomEdit: (roomId: String) -> Unit,
+    onNavToSettingsPage: () -> Unit,
+    onNavToProfilePage: () -> Unit,
+    onNavToFriendsPage: () -> Unit,
+    onNavToSearchPage: () -> Unit,
 ) {
     val homeUiState = homeViewModel?.homeUiState ?: HomeUiState()
 
-    val applicationContext = LocalContext.current
+    var openDialog by remember {
+        mutableStateOf(false)
+    }
+    var selectedRoom: Rooms? by remember {
+        mutableStateOf(null)
+    }
 
-    // 1 - Set up the OfflinePlugin for offline storage
-    val offlinePluginFactory = StreamOfflinePluginFactory(
-        config = Config(
-            backgroundSyncEnabled = true,
-            userPresence = true,
-            persistenceEnabled = true,
-            uploadAttachmentsNetworkType = UploadAttachmentsNetworkType.NOT_ROAMING,
-        ),
-        appContext = applicationContext,
-    )
+    var createRoomVisibility: Boolean by remember { mutableStateOf(false) }
 
-    Log.e("/// PHASE 1", "offline storage")
+    var roomName: String by remember { mutableStateOf("") }
+    //var
 
-    // 2 - Set up the client for API calls and with the plugin for offline storage
-    val client = ChatClient.Builder(/*b67pax5b2wdq"*/"sm8um5rv2gtx", applicationContext)
-        .withPlugin(offlinePluginFactory)
-        .logLevel(ChatLogLevel.ALL) // Set to NOTHING in prod
-        .build()
+    val scaffoldState = rememberScaffoldState()
+    val scrollState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
 
-    Log.e("/// PHASE 2", "client setup")
+    LaunchedEffect(key1 = Unit) {
+        homeViewModel?.loadRooms()
+    }
 
-    // 3 - Authenticate and connect the user
-    val user = io.getstream.chat.android.client.models.User(
-        id = "FriendTestUser_4e88e519-ff4d-4f35-be10-f1274f6a7015",
-        name = "FriendTestUser",
-        image = "https://bit.ly/2TIt8NR",
-    )
+    when (homeUiState.chatsList) {
+        is Resources.Loading -> {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .wrapContentSize(Alignment.Center)
+            )
+        }
+        is Resources.Success -> {
+            Scaffold(
+                scaffoldState = scaffoldState,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colors.background),
+                floatingActionButton = {
+                    FloatingActionButton(
+                        onClick = {
+                            navToRoom()
+                        },
+                        backgroundColor = MaterialTheme.colors.onSurface
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Create Room",
+                            tint = MaterialTheme.colors.primary
+                        )
+                    }
+                },
+                floatingActionButtonPosition = FabPosition.End,
+                isFloatingActionButtonDocked = false,
+                bottomBar = { BottomNavigationHome(navToSettingsScreen = onNavToSettingsPage, navToProfileScreen = onNavToProfilePage, navToFriendsScreen = onNavToFriendsPage, navToSearchScreen = onNavToSearchPage) },
+                topBar = {
+                    HomeTopBar(
+                        appTitle = "StarChat",
+                        onSignOutClick = {
+                            homeViewModel?.signOut()
+                            onNavToLoginPage.invoke()
+                        }
+                    )
+                }
+            ) {
+                LazyColumn(modifier = Modifier
+                    .padding(it)
+                    .fillMaxSize()
+                ) {
 
-    val instance = ChatClient.instance()
+                    items(homeUiState.chatsList.data ?: emptyList()) { roomInfo ->
 
-    Log.e("/// PHASE 3", "log in user")
+                        RoomItem(
+                            roomInfo,
+                            onRoomClick = {
+                                onRoomClick(roomInfo.roomId)
+                            },
+                            onLongClick = {
+                                openDialog = true
+                                selectedRoom = roomInfo
+                            }
+                        )
 
-    client.connectUser(
-        user = user,
-        token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiRnJpZW5kVGVzdFVzZXJfNGU4OGU1MTktZmY0ZC00ZjM1LWJlMTAtZjEyNzRmNmE3MDE1In0.QapG7H4trLYLevAgA5VA21Bm6x7ABInur-rQEbiKVeo"
-    ).enqueue()
+                        // Divider(modifier = Modifier.fillMaxWidth(), thickness = 1.dp, color = Color.LightGray)
 
-    //val channelClient = client.channel(channelType = "messaging", channelId = "general")
-
-    Log.i("/// Info about the current user", "Current User is :${client.getCurrentUser()} ")
-    Log.i("/// Info about the current users token", "Current Token is: ${client.getCurrentToken()} ")
-
-    Log.e("/// PHASE 4", "connect user")
-
-    MessagesScreen(channelId = "messaging:TestChannel_266b8a12-8fba-4f18-9d6d-40ba0bb9ce8e")
-
-    Log.e("/// PHASE 5", "display message Screen")
-
-    StarChatTheme() {
-        ChannelsScreen(
-            title = stringResource(id = R.string.app_name),
-            isShowingSearch = true,
-            onItemClick = { channel ->
-                onChannelClick(channel.id)
-            },
-            onBackPressed = {  },
-            onHeaderAvatarClick = {
-                homeViewModel?.signOut()
-                onSignOutClick() },
-            onHeaderActionClick = {
-
-                Log.e("CREATING CHANNEL ///////////", "creating channel")
-
-                client.createChannel(
-                    channelType = "messaging",
-                    channelId = "123",
-                    memberIds = listOf("thierry", "tutorial-droid"),
-                    extraData = emptyMap()
-                ).enqueue { result ->
-                    if (result.isSuccess) {
-                        val channel = result.data()
-                        Log.d("Line 95, Created Channel ///////////", "Created Channel with id of ${channel.id}")
-                    } else {
-                        Log.e("Line 97, ERROR CREATING CHANNEL ///////////", "Error creating channel: Error = ${result.error().message}", result.error().cause)
                     }
                 }
+            }
 
-            },
-        )
+            AnimatedVisibility(visible = openDialog) {
+                AlertDialog(
+                    onDismissRequest = {
+                        openDialog = false
+                    },
+                    title = { Text(
+                        text = "Delete this Chat Room?",
+                        color = MaterialTheme.colors.onSurface,
+                    ) },
+                    backgroundColor = MaterialTheme.colors.primary,
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                selectedRoom?.roomId?.let {
+                                    homeViewModel?.deleteRoom(it)
+                                }
+                                openDialog = false
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                backgroundColor = MaterialTheme.colors.onSurface
+                            ),
+                        ) {
+                            Text(
+                                text = "Delete",
+                                color = MaterialTheme.colors.surface
+                            )
+                        }
+                    },
+                    dismissButton = {
+                        Button(
+                            onClick = { openDialog = false },
+                            colors = ButtonDefaults.buttonColors(
+                                backgroundColor = MaterialTheme.colors.surface
+                            ),
+                        ) {
+                            Text(
+                                text = "Cancel",
+                                color = MaterialTheme.colors.onSurface
+                            )
+                        }
+                    }
+                )
+            }
+
+        }
+        is Resources.Failure -> {
+            // ErrorScreen(homeUiState)
+            Log.e("///// HomeScreen /////", "Error: ${homeUiState.chatsList.throwable}")
+        }
+    }
+
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun RoomItem(
+    roomInfo: Rooms,
+    onRoomClick: (String) -> Unit,
+    onLongClick: () -> Unit
+) {
+
+    Card(
+        modifier = Modifier.padding(12.dp),
+        shape = RoundedCornerShape(30),
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colors.primary)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .background(MaterialTheme.colors.primary)
+                    .padding(12.dp)
+                    .combinedClickable(
+                        onClick = {
+                            onRoomClick(roomInfo.roomId)
+                        },
+                        onLongClick = {
+                            onLongClick.invoke()
+                        }
+                    ),
+                horizontalArrangement = Arrangement.Start
+            ) {
+                coilImage(
+                    url = roomInfo.imageUrl,
+                    modifier = Modifier.size(width = 50.dp, height = 50.dp),
+                    shape = RoundedCornerShape(100)
+                )
+                Column(
+                    modifier = Modifier.padding(12.dp),
+                    verticalArrangement = Arrangement.SpaceEvenly,
+                    horizontalAlignment = Alignment.Start
+                ) {
+                    Text(
+                        text = roomInfo.roomName,
+                        fontSize = 16.sp,
+                        color = MaterialTheme.colors.onSurface,
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(0.8f),
+                        horizontalArrangement = Arrangement.Start,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Log.d("///// HomeScreen /////", "Seen Message?: ${roomInfo.lastMessageSeen} \nMessage by You?: ${roomInfo.lastMessageBy != FirebaseAuth.getInstance().currentUser?.uid}\n if statement will trigger?: ${!roomInfo.lastMessageSeen && roomInfo.lastMessageBy != FirebaseAuth.getInstance().currentUser?.uid}")
+                        if (!roomInfo.lastMessageSeen && roomInfo.lastMessageBy != FirebaseAuth.getInstance().currentUser?.uid){
+                            Box(
+                                modifier = Modifier
+                                    .drawBehind {
+                                        drawCircle(
+                                            color = Color.Blue,
+                                            radius = 5.dp.toPx(),
+                                        )
+                                    }
+                                    .padding(horizontal = 8.dp)
+                            )
+                            Log.d("///// HomeScreen /////", "Seen Notification Triggered")
+                        }
+                        if (roomInfo.lastMessageSent != "") {
+                            Text(
+                                text = roomInfo.lastMessageSent,
+                                fontSize = 16.sp,
+                                color = MaterialTheme.colors.background,
+                                overflow = TextOverflow.Ellipsis,
+                                maxLines = 1
+                            )
+                        } else {
+                            Text(
+                                text = "No Messages yet, Say Hi!",
+                                fontSize = 16.sp,
+                                color = MaterialTheme.colors.secondary,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    }
+                }
+            }
+            IconButton(
+                onClick = {
+                    onLongClick.invoke()
+                },
+                modifier = Modifier
+                    .padding(12.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Delete,
+                    contentDescription = "Delete Room",
+                    modifier = Modifier
+                        .size(24.dp),
+                    tint = MaterialTheme.colors.onSurface
+                )
+            }
+        }
     }
 }
 
 @Composable
-fun FriendItem(userInfo: User) {
-    Column() {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color.White)
-                .padding(12.dp),
-            horizontalArrangement = Arrangement.Start
-        ) {
-            coilImage(
-                url = "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/Image_created_with_a_mobile_phone.png/440px-Image_created_with_a_mobile_phone.png",
-                modifier = Modifier.size(64.dp),
-                shape = RoundedCornerShape(100)
-            )
-            Card(
-                shape = RoundedCornerShape(15),
-                modifier = Modifier.padding(16.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(12.dp)
-                ) {
-                    Text(
-                        text = userInfo.userName ?: "ERROR: No Message",
-                        fontSize = 16.sp,
-                        color = Color.Black
-                    )
-                    Text(
-                        text = userInfo.Status ?: "ERROR: No User",
-                        fontSize = 14.sp,
-                        color = Color.Gray
-                    )
+fun DirectRoomItem(
+    user: User,
+    roomInfo: Rooms,
+    onRoomClick: (String) -> Unit
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color.White)
+            .padding(12.dp)
+            .clickable(
+                onClick = {
+                    onRoomClick(roomInfo.roomId)
                 }
-            }
+            ),
+        horizontalArrangement = Arrangement.Start
+    ) {
+        coilImage(
+            url = user.imageUrl,
+            modifier = Modifier.size(64.dp),
+            shape = RoundedCornerShape(100)
+        )
+        Column(
+            modifier = Modifier.padding(12.dp),
+            verticalArrangement = Arrangement.SpaceEvenly,
+            horizontalAlignment = Alignment.Start
+        ) {
+            Text(
+                text = user.userName,
+                fontSize = 16.sp,
+                color = Color.Black,
+            )
+            Text(
+                text = roomInfo.roomId,
+                fontSize = 16.sp,
+                color = Color.Gray,
+            )
         }
-        Divider(modifier = Modifier.fillMaxWidth(), thickness = 1.dp, color = Color.LightGray)
     }
 }

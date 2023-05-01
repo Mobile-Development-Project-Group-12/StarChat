@@ -1,12 +1,10 @@
 package com.group12.starchat.view.screens.login
 
-import android.content.res.Configuration.UI_MODE_NIGHT_NO
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
-import com.group12.starchat.viewModel.SigninViewModel
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
@@ -97,17 +95,47 @@ fun SignUpScreen(
             modifier = Modifier.padding(16.dp),
         )
 
-        coilImage(uri = pickedPhoto, modifier = Modifier
-            .padding(1.dp)
-            .size(100.dp)
-            .clickable(onClick = {
-                    singlePhotoLauncher.launch(
-                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+        if (pickedPhoto != null) {
+            coilImage(uri = pickedPhoto, modifier = Modifier
+                .padding(1.dp)
+                .size(100.dp)
+                .clickable(
+                    onClick = {
+                        singlePhotoLauncher.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        )
+                    },
+                ),
+                shape = RoundedCornerShape(100),
+            )
+        } else {
+            Card(
+                shape = RoundedCornerShape(100),
+                modifier = Modifier
+                    .padding(1.dp)
+                    .size(100.dp)
+                    .clickable(
+                        onClick = {
+                            singlePhotoLauncher.launch(
+                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                            )
+                        },
+                    ),
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "No Image!",
+                        color = MaterialTheme.colors.onSurface,
+                        textAlign = TextAlign.Center
                     )
-                },
-            ),
-            shape = RoundedCornerShape(100),
-        )
+                }
+            }
+        }
 
         /**
          * Sign Up Form
