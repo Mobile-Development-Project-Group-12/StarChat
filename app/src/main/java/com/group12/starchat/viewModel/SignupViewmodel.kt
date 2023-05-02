@@ -13,43 +13,109 @@ import com.group12.starchat.model.repository.AuthenticationRepo
 import com.group12.starchat.model.repository.DatabaseRepo
 import kotlinx.coroutines.launch
 
+/**
+ *  This class is responsible for handling the logic for the SignUp screen. It
+ *  includes methods such as creating a user, and validating the signup form.
+ *
+ *  @param repository AuthenticationRepo: This parameter is used to access methods
+ *  that interact with the Firebase's authentication system.
+ *  @param databaseRepository DatabaseRepo: This parameter is used to access
+ *  methods that interact with the Firebase's Firestore database.
+ *  @author Daniel Mendes
+ */
 class SignupViewModel(
     private val repository: AuthenticationRepo = AuthenticationRepo(),
     private val databaseRepository: DatabaseRepo = DatabaseRepo(),
-) : ViewModel() {
+): ViewModel() {
 
+    // This variable checks if the user is logged in.
     val hasUser: Boolean
         get() = repository.hasUser()
 
+    // an instance of the SignupUiState class. Use this to access the values
+    // within the ui state.
     var signupUiState by mutableStateOf(SignupUiState())
         private set
 
+    /**
+     * This method is used to change the current users email. It does this by
+     * replacing the current email with the new one in the ui state.
+     *
+     * @param email String: This parameter is used to set the email value for the
+     * current user.
+     */
     fun onEmailChange(email: String) {
         signupUiState = signupUiState.copy(email = email)
     }
 
+    /**
+     * This method is used to change the current users username. It does this by
+     * replacing the current username with the new one in the ui state.
+     *
+     * @param userName String: This parameter is used to set the username value for
+     * the current user.
+     */
     fun onUserNameChange(userName: String) {
         signupUiState = signupUiState.copy(userName = userName)
     }
 
+    /**
+     * This method is used to change the current users password. It does this by
+     * replacing the current password with the new one in the ui state.
+     *
+     * @param password String: This parameter is used to set the password value for
+     * the current user.
+     */
     fun onPasswordChangeSignup(password: String) {
         signupUiState = signupUiState.copy(password = password)
     }
 
+    /**
+     * This method is used to change the on confirm password field. It does this by
+     * replacing the current confirm password with the new one in the ui state.
+     *
+     * @param password String: This parameter is used to set the on Confirm
+     * password value for the current user.
+     */
     fun onConfirmPasswordChange(password: String) {
         signupUiState = signupUiState.copy(confirmPassword = password)
     }
 
+    /**
+     * This method is used to change the current users image. It does this by
+     * replacing the current image with the new one in the ui state.
+     *
+     * @param imageUri Uri: This parameter is used to set the image value for the
+     * current user. Uri is the path of the image in the device. The diffrence
+     * between Uri and Urls in this project, is that Urls refer to paths on the
+     * internet.
+     */
     fun onImageChange(imageUri: Uri?){
         signupUiState = signupUiState.copy(imageUri = imageUri)
     }
 
+    /**
+     * This method is used to validate the signup form. It does this by checking
+     * if all the fields are filled in, and correct. For example, if you dont add a
+     * profile picture, the method will return false.
+     *
+     * @return Boolean: This method returns true if all the fields are filled in,
+     * and false if not.
+     */
     private fun validateSignupForm() =
         signupUiState.userName.isNotBlank() &&
                 signupUiState.password.isNotBlank() &&
                 signupUiState.email.isNotBlank() &&
                 signupUiState.imageUri != null
 
+    /**
+     * This method is used to create a user. It does this by calling the createUser
+     * method from the AuthenticationRepo class. It also calls the addUser method
+     * from the DatabaseRepo class to add the user to the database.
+     *
+     * @param context Context: This parameter is used to display a toast message
+     * on the current screen.
+     */
     fun createUser(context: Context) = viewModelScope.launch {
         try {
 
@@ -114,6 +180,10 @@ class SignupViewModel(
     }
 }
 
+/**
+ * This ui state class is used to hold the values that will be displayed on the
+ * SignUp screen.
+ */
 data class SignupUiState(
     val email: String = "",
     val password: String = "",

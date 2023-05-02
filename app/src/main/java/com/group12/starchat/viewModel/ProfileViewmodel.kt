@@ -8,33 +8,64 @@ import androidx.lifecycle.viewModelScope
 import com.group12.starchat.model.repository.DatabaseRepo
 import kotlinx.coroutines.launch
 
+/**
+ * This class is responsible for handling the logic for the Profile screen. It
+ * includes methods such as changing the user's profile picture, username, and bio.
+ *
+ * @param repository DatabaseRepo: This parameter is used to access
+ * methods that interact with the Firebase's Firestore database.
+ * @author Daniel Mendes
+ */
 class ProfileViewModel(
     private val repository: DatabaseRepo = DatabaseRepo(),
 ): ViewModel() {
 
-    /** This variable gets the current state of the Entry Ui, aswell as sets the state of the Entry Ui*/
+    // an instance of the ProfileUiState class. Use this to access the values
+    // within the ui state.
     var profileUiState by mutableStateOf(ProfileUiState())
         private set
 
+    // This private variable is used to check if the user is currently editing
+    // their profile picture.
     private val _UserNameState = mutableStateOf(UserNameState.Viewing)
+
+    // use this to access the value of the _UserNameState variable.
     val editUserNameState: UserNameState
         get() = _UserNameState.value
 
+    // This private variable is used to check if the user is currently editing
     private val _BioState = mutableStateOf(BioState.Viewing)
+
+    // use this to access the value of the _BioState variable.
     val editBioState: BioState
         get() = _BioState.value
 
-    /** This private variable checks if there is a user logged in */
+    // This private variable is used to check if the user is currently editing
     private val hasUser:Boolean
         get() = repository.hasUser()
 
+    // This variable is used to get the current user's id.
     private val userId: String
         get() = repository.getUserId()
 
+    /**
+     * This method is used to change the current users name. It does this by
+     * replacing the current user name variable with the new one in the ui state.
+     *
+     * @param userName String: This parameter is used to set the username value
+     * for the current user.
+     */
     fun onUserNameChange(userName: String){
         profileUiState = profileUiState.copy(userName = userName)
     }
 
+    /**
+     * This method is used to change the current users bio. It does this by
+     * replacing the current bio variable with the new one in the ui state.
+     *
+     * @param bio String: This parameter is used to set the bio value for the
+     * current user.
+     */
     fun onBioChange(bio: String){
         profileUiState = profileUiState.copy(bio = bio)
     }
@@ -61,6 +92,10 @@ class ProfileViewModel(
         profileUiState = profileUiState.copy(imageUrl = imageUrl)
     }
 
+    /**
+     * This method is used to update the current user's profile. It does this by
+     * calling the updateProfile method from the DatabaseRepo class.
+     */
     fun updateProfile(){
         if(hasUser){
             repository.updateProfile(
@@ -74,6 +109,10 @@ class ProfileViewModel(
         }
     }
 
+    /**
+     * This method is used to load the current user's profile. It does this by
+     * calling the getUser method from the DatabaseRepo class.
+     */
     fun loadProfile() = viewModelScope.launch {
         if(hasUser){
             repository.getUser(
@@ -106,6 +145,10 @@ class ProfileViewModel(
 
 }
 
+/**
+ * This class is used to store the current user's profile information. It is
+ * used to update the user's profile.
+ */
 data class ProfileUiState(
     val userId: String = "",
     val userName: String = "",
@@ -118,11 +161,11 @@ data class ProfileUiState(
 )
 
 enum class UserNameState {
-    Editing,
+    // Editing,
     Viewing
 }
 
 enum class BioState {
-    Editing,
+    // Editing,
     Viewing
 }

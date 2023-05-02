@@ -1,5 +1,8 @@
 package com.group12.starchat.model.models
 
+/**
+ * This is the Room data model. It is used to store the details of a chat room.
+ */
 data class Rooms(
     val roomId: String = "",
     val roomName: String = "",

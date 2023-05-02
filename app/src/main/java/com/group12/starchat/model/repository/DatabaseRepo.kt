@@ -12,6 +12,7 @@ import com.google.firebase.storage.FirebaseStorage
 import com.group12.starchat.model.models.Chat
 import com.group12.starchat.model.models.Rooms
 import com.group12.starchat.model.models.User
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.awaitClose
@@ -33,20 +34,40 @@ const val FRIENDS_COLLECTION_REF = "Friends"
 const val BLOCKED_COLLECTION_REF = "Blocked"
 const val MESSAGES_COLLECTION_REF = "Messages"
 
-class DatabaseRepo() {
+/**
+ * This class is a type of Repository that is used to handle functionality from the
+ * DatabaseRepo, which includes creating a user, logging in a user, and
+ * checking if a user exists. This is done by using Firebase's Firestore.
+ */
+class DatabaseRepo {
 
+    // gets an instance of Firebase's storage
     var storage = FirebaseStorage.getInstance()
 
+    /**
+     * Gets an instance of the current user
+     */
     fun user() = Firebase.auth.currentUser
 
+    /**
+     * This function checks if a user is logged in.
+     *
+     * @return Boolean: true if the user is logged in, false otherwise
+     */
     fun hasUser(): Boolean = Firebase.auth.currentUser != null
 
+    /**
+     * This function gets the user id of the current user
+     *
+     * @return String: the user id of the current user
+     */
     fun getUserId(): String = Firebase.auth.currentUser?.uid.orEmpty()
 
-    val scope = GlobalScope
-
-    // fun getEmail(): String = Firebase.auth.currentUser?.updateProfile()
-
+    /**
+     * This function returns the path of a users information
+     *
+     * @return String: the path of a users information
+     */
     fun getUsersRef(): CollectionReference {
 
         val friendsRef = Firebase.firestore.collection(USERS_COLLECTION_REF)
@@ -54,6 +75,12 @@ class DatabaseRepo() {
         return friendsRef
     }
 
+    /**
+     * This function returns the path of a users friends
+     *
+     * @param userId the user id of the current user
+     * @return String: the path of a users friends
+     */
     fun getFriendsRef(userId: String): CollectionReference {
 
         val friendsRef = Firebase.firestore.collection(USERS_COLLECTION_REF).document(userId).collection(FRIENDS_COLLECTION_REF)
@@ -61,6 +88,12 @@ class DatabaseRepo() {
         return friendsRef
     }
 
+    /**
+     * This function returns the path of a users blocked list
+     *
+     * @param userId the user id of the current user
+     * @return String: the path of a users blocked list
+     */
     fun getBlockedRef(userId: String): CollectionReference {
 
         val blockedRef = Firebase.firestore.collection(USERS_COLLECTION_REF).document(userId).collection(BLOCKED_COLLECTION_REF)
@@ -68,6 +101,12 @@ class DatabaseRepo() {
         return blockedRef
     }
 
+    /**
+     * This function returns the path of a users messages
+     *
+     * @param roomId the room id of the current user
+     * @return String: the path of a users messages
+     */
     fun getMessagesRef(roomId: String): CollectionReference {
 
         val messagesRef = Firebase.firestore.collection(MESSAGEROOMS_COLLECTION_REF).document(roomId).collection(MESSAGES_COLLECTION_REF)
@@ -75,6 +114,11 @@ class DatabaseRepo() {
         return messagesRef
     }
 
+    /**
+     * This function returns the path of a users rooms
+     *
+     * @return String: the path of a users rooms
+     */
     fun getRoomsRef(): CollectionReference {
 
         val roomsRef = Firebase.firestore.collection(MESSAGEROOMS_COLLECTION_REF)
@@ -82,32 +126,14 @@ class DatabaseRepo() {
         return roomsRef
     }
 
-    fun getAllUsers(): Flow<Resources<List<User>>> = callbackFlow {
-        var snapshotStateListener:ListenerRegistration? = null
-
-        try {
-            snapshotStateListener = getUsersRef()
-                .orderBy("userId")
-                .whereNotEqualTo("userId", getUserId())
-                .addSnapshotListener{ snapshot, e ->
-                    val response = if (snapshot != null) {
-                        val users = snapshot.toObjects(User::class.java)
-                        Resources.Success(data = users)
-                    } else {
-                        Resources.Failure(throwable = e)
-                    }
-                    trySend(response)
-                }
-        } catch (e: Exception) {
-            trySend(Resources.Failure(e.cause))
-            e.printStackTrace()
-        }
-
-        awaitClose {
-            snapshotStateListener?.remove()
-        }
-    }
-
+    /**
+     * This function finds a list of users in the database. The users are returned
+     * if the userName matches the query.
+     *
+     * @param userName the user name of the current user
+     * @param query the query to search for
+     * @return Flow<Resources<List<User>>>: a list of users that match the query
+     */
     fun getUsersByName(
         userName: String,
         query: String
@@ -138,6 +164,13 @@ class DatabaseRepo() {
         }
     }
 
+    /**
+     * This function gets a user by their user id
+     *
+     * @param userId the user id of the current user
+     * @param onError the error that is thrown if the user is not found
+     * @param onSuccess the user that is returned if the user is found
+     */
     fun getUser(
         userId: String,
         onError: (Throwable?) -> Unit,
@@ -154,34 +187,11 @@ class DatabaseRepo() {
             }
     }
 
-    fun getRoomUsers(
-        roomId: String
-    ): Flow<Resources<List<User>>> = callbackFlow {
-        var snapshotStateListener:ListenerRegistration? = null
-
-        try {
-            snapshotStateListener = getUsersRef()
-                .orderBy("userId")
-                .whereEqualTo("roomId", roomId)
-                .addSnapshotListener{ snapshot, e ->
-                    val response = if (snapshot != null) {
-                        val users = snapshot.toObjects(User::class.java)
-                        Resources.Success(data = users)
-                    } else {
-                        Resources.Failure(throwable = e)
-                    }
-                    trySend(response)
-                }
-        } catch (e: Exception) {
-            trySend(Resources.Failure(e.cause))
-            e.printStackTrace()
-        }
-
-        awaitClose {
-            snapshotStateListener?.remove()
-        }
-    }
-
+    /**
+     * This function gets the users friends, and returns them in a list.
+     *
+     * @return Flow<Resources<List<User>>>: a list of the users friends
+     */
     fun getFriends(): Flow<Resources<List<User>>> = callbackFlow {
         var snapshotStateListener:ListenerRegistration? = null
 
@@ -207,6 +217,11 @@ class DatabaseRepo() {
         }
     }
 
+    /**
+     * This function gets the users blocked list, and returns them in a list.
+     *
+     * @return Flow<Resources<List<User>>>: a list of the users blocked list
+     */
     fun getBlocked(): Flow<Resources<List<User>>> = callbackFlow {
         var snapshotStateListener:ListenerRegistration? = null
 
@@ -232,6 +247,15 @@ class DatabaseRepo() {
         }
     }
 
+    /**
+     * This function adds a friend to the users friends list
+     *
+     * @param friendId the user id of the friend to add
+     * @param userName the user name of the friend to add
+     * @param imageUrl the image url of the friend to add
+     * @param bio the bio of the friend to add
+     * @param email the email of the friend to add
+     */
     fun addFriend(
         friendId: String,
         userName: String,
@@ -263,6 +287,11 @@ class DatabaseRepo() {
             .set(friend)
     }
 
+    /**
+     * This function removes a friend from the users friends list
+     *
+     * @param friendId the user id of the friend to remove
+     */
     fun removeFriend(
         friendId: String
     ) {
@@ -274,6 +303,15 @@ class DatabaseRepo() {
             }
     }
 
+    /**
+     * This function blocks a user and adds them to the users blocked list
+     *
+     * @param userId the user id of the user to block
+     * @param userName the user name of the user to block
+     * @param imageUrl the image url of the user to block
+     * @param bio the bio of the user to block
+     * @param email the email of the user to block
+     */
     fun blockUser(
         userId: String,
         userName: String,
@@ -304,6 +342,11 @@ class DatabaseRepo() {
             .set(blocked)
     }
 
+    /**
+     * This function unblocks a user and removes them from the users blocked list
+     *
+     * @param userId the user id of the user to unblock
+     */
     fun unBlockUser(
         userId: String
     ) {
@@ -315,13 +358,22 @@ class DatabaseRepo() {
             }
     }
 
+    /**
+     * This function adds a user to the database
+     *
+     * @param userName the user name of the user to add
+     * @param imageUri the image uri of the user to add
+     * @param email the email of the user to add
+     * @param onComplete a function to call when the user has been added
+     */
+    @OptIn(DelicateCoroutinesApi::class)
     fun addUser(
         userName: String,
         imageUri: Uri,
         email: String,
         onComplete: (Boolean) -> Unit
     ) {
-        var imageFile = imageUri
+        val imageFile = imageUri
         val userProfilePictureRef = storage.reference.child("Users/${getUserId()}/Images/${getUserId()}")
 
         GlobalScope.launch {
@@ -354,6 +406,12 @@ class DatabaseRepo() {
         }
     }
 
+    /**
+     * This function gets all the chat rooms that the current user is in
+     *
+     * @return Flow<Resources<List<Rooms>>>: a list of the chat rooms that the
+     * current user is in
+     */
     fun getRooms(): Flow<Resources<List<Rooms>>> = callbackFlow {
         var snapshotStateListener:ListenerRegistration? = null
 
@@ -380,6 +438,13 @@ class DatabaseRepo() {
         }
     }
 
+    /**
+     * This function gets a chat room by its id
+     *
+     * @param roomId the id of the chat room to get
+     * @param onError a function to call if there is an error
+     * @param onSuccess a function to call if the chat room is successfully retrieved
+     */
     fun getRoom(
         roomId: String,
         onError: (Throwable?) -> Unit,
@@ -396,6 +461,14 @@ class DatabaseRepo() {
             }
     }
 
+    /**
+     * This function creates a chat room
+     *
+     * @param roomName the name of the chat room to create
+     * @param imageUri the image uri of the chat room to create
+     * @param users the users to add to the chat room
+     * @param onComplete a function to call when the chat room has been created
+     */
     fun createRoom(
         roomName: String,
         imageUri: Uri?,
@@ -427,6 +500,13 @@ class DatabaseRepo() {
         }
     }
 
+    /**
+     * This function creates a chat room with a default image, or an external
+     * firebase storage image
+     *
+     * @param roomId the id of the chat room to delete
+     * @param onComplete a function to call when the chat room has been deleted
+     */
     fun createRoomUrl(
         roomName: String,
         imageUrl: String,
@@ -450,6 +530,12 @@ class DatabaseRepo() {
             }
     }
 
+    /**
+     * This function deletes a chat room
+     *
+     * @param roomId the id of the chat room to delete
+     * @param onComplete a function to call when the chat room has been deleted
+     */
     fun deleteRoom(
         roomId: String,
         onComplete: (Boolean) -> Unit
@@ -462,6 +548,16 @@ class DatabaseRepo() {
             }
     }
 
+    /**
+     * This function updates a chat room
+     *
+     * @param roomId the id of the chat room to update
+     * @param roomName the name of the chat room to update
+     * @param imageUri the image uri of the chat room to update
+     * @param imageUrl the image url of the chat room to update
+     * @param users the users to add to the chat room
+     * @param onComplete a function to call when the chat room has been updated
+     */
     fun updateRoom(
         roomId: String,
         roomName: String,
@@ -508,6 +604,13 @@ class DatabaseRepo() {
         }
     }
 
+    /**
+     * This function updates whether a message has been seen, what the last
+     * message is, and who sent the last message
+     *
+     * @param roomId the id of the chat room to update
+     * @param message the message to update
+     */
     fun messageToRoom(
         roomId: String,
         message: String,
@@ -524,6 +627,12 @@ class DatabaseRepo() {
             .update(room)
     }
 
+    /**
+     * This function updates whether a message has been seen
+     *
+     * @param roomId the id of the chat room to update
+     * @param messageSeen whether the message has been seen
+     */
     fun seenMessage(
         roomId: String,
         messageSeen: Boolean,
@@ -538,6 +647,12 @@ class DatabaseRepo() {
             .update(room)
     }
 
+    /**
+     * This function gets the messages from a chat room
+     *
+     * @param roomId the id of the chat room to get the messages from
+     * @return a flow of the messages from the chat room
+     */
     fun getMessages(
         roomId: String
     ): Flow<Resources<List<Chat>>> = callbackFlow {
@@ -564,6 +679,16 @@ class DatabaseRepo() {
         }
     }
 
+    /**
+     * This function gets the updates the current users profile information. This is
+     * used when the user updates their profile information.
+     *
+     * @param userName the name of the user
+     * @param imageUri the image uri of the user
+     * @param imageUrl the image url of the user
+     * @param bio the bio of the user
+     * @param onComplete a function to call when the profile has been updated
+     */
     fun updateProfile(
         userName: String,
         imageUri: Uri?,
@@ -607,6 +732,16 @@ class DatabaseRepo() {
         }
     }
 
+    /**
+     * This function sends a message to a chat room
+     *
+     * @param imageUrl the image url of the user
+     * @param userName the name of the user
+     * @param userId the id of the user
+     * @param message the message to send
+     * @param roomId the id of the chat room to send the message to
+     * @param onComplete a function to call when the message has been sent
+     */
     fun sendMessage(
         imageUrl: String,
         userName: String,
@@ -634,6 +769,13 @@ class DatabaseRepo() {
             }
     }
 
+    /**
+     * This function deletes a message from a chat room
+     *
+     * @param roomId the id of the chat room to delete the message from
+     * @param messageId the id of the message to delete
+     * @param onComplete a function to call when the message has been deleted
+     */
     fun deleteMessage(
         roomId: String,
         messageId: String,
@@ -647,10 +789,18 @@ class DatabaseRepo() {
             }
     }
 
+    /**
+     * This function signs out the logged in user
+     */
     fun signOut() = Firebase.auth.signOut()
 
 }
 
+/**
+ * This class is used to determine the state of a resource. If the resource is
+ * successful then the data is returned. If the resource is loading then the
+ * data is null. If the resource is a failure then a throwable error is returned.
+ */
 sealed class Resources<T>(
     val data: T? = null,
     val throwable: Throwable? = null,
