@@ -20,6 +20,11 @@ A Simple Messaging application
 ## Technologies Used
 This app was made using Kotlin and Jetpack compose, aswell as using firebases firestore, authentication, and storage for users. It follows an MVVM Architecture pattern, and it was made using an agile development framework such as kanban.
 
+We also used:
+- Figma: for design
+- Adobe color wheel: to pick accessible colors
+- Discord: For communication
+
 ## Primary Idea
 The idea of this application was to make the most simple, easy to use, messaging application ever seen.
 
